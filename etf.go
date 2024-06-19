@@ -64,7 +64,7 @@ type Export struct {
 // Erlang external term tags.
 const (
 	ettAtom          = 'd'
-	ettAtomUTF8      = 'v' // this is beyond retarded
+	ettAtomUTF8      = 'v'
 	ettBinary        = 'm'
 	ettBitBinary     = 'M'
 	ettCachedAtom    = 'C'
@@ -85,7 +85,7 @@ const (
 	ettPort          = 'f'
 	ettRef           = 'e'
 	ettSmallAtom     = 's'
-	ettSmallAtomUTF8 = 'w' // this is beyond retarded
+	ettSmallAtomUTF8 = 'w'
 	ettSmallBig      = 'n'
 	ettSmallInteger  = 'a'
 	ettSmallTuple    = 'h'
