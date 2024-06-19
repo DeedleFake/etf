@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"reflect"
+	"slices"
 )
 
 type ErrUnknownType struct {
@@ -354,12 +355,6 @@ func (c *Context) writeTuple(w io.Writer, tuple Tuple) (err error) {
 }
 
 func reverse(b []byte) []byte {
-	size := len(b)
-	hsize := size >> 1
-
-	for i := 0; i < hsize; i++ {
-		b[i], b[size-i-1] = b[size-i-1], b[i]
-	}
-
+	slices.Reverse(b)
 	return b
 }
