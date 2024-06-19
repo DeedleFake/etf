@@ -115,14 +115,6 @@ func (c *Context) ReadDist(r io.Reader) (err error) {
 }
 
 func (c *Context) Read(r io.Reader) (term Term, err error) {
-	var version byte
-	if version, err = ruint8(r); err != nil {
-		return nil, err
-	}
-	if version != EtVersion {
-		return nil, fmt.Errorf("unsupported version read: %d", version)
-	}
-
 	var etype byte
 	if etype, err = ruint8(r); err != nil {
 		return nil, err
@@ -130,6 +122,10 @@ func (c *Context) Read(r io.Reader) (term Term, err error) {
 	var b []byte
 
 	switch etype {
+	case EtVersion:
+		// Just skip the first byte if it was the version number.
+		return c.Read(r)
+
 	case ettAtom, ettAtomUTF8:
 		// $dLL… | $vLL…
 		if b, err = buint16(r); err == nil {
