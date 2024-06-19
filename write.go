@@ -21,6 +21,15 @@ func (c *Context) WriteDist(w io.Writer, _ []Term) (err error) {
 }
 
 func (c *Context) Write(w io.Writer, term interface{}) (err error) {
+	_, err = w.Write([]byte{EtVersion})
+	if err != nil {
+		return err
+	}
+
+	return c.write(w, term)
+}
+
+func (c *Context) write(w io.Writer, term any) (err error) {
 	switch v := term.(type) {
 	case bool:
 		err = c.writeBool(w, v)
@@ -54,7 +63,7 @@ func (c *Context) Write(w io.Writer, term interface{}) (err error) {
 		case reflect.Array, reflect.Slice:
 			err = c.writeList(w, term)
 		case reflect.Ptr:
-			err = c.Write(w, rv.Elem())
+			err = c.write(w, rv.Elem())
 		//case reflect.Map // FIXME
 		default:
 			err = &ErrUnknownType{rv.Type()}
@@ -256,7 +265,7 @@ func (c *Context) writeList(w io.Writer, l interface{}) (err error) {
 
 	for i := 0; i < n; i++ {
 		v := rv.Index(i).Interface()
-		if err = c.Write(w, v); err != nil {
+		if err = c.write(w, v); err != nil {
 			return
 		}
 	}
@@ -274,7 +283,7 @@ func (c *Context) writeRecord(w io.Writer, r interface{}) (err error) {
 
 	for i := 0; i < n; i++ {
 		if f := rv.Field(i); f.CanInterface() {
-			if err = c.Write(buf, f.Interface()); err != nil {
+			if err = c.write(buf, f.Interface()); err != nil {
 				return
 			}
 			arity++
@@ -346,7 +355,7 @@ func (c *Context) writeTuple(w io.Writer, tuple Tuple) (err error) {
 	}
 
 	for _, v := range tuple {
-		if err = c.Write(w, v); err != nil {
+		if err = c.write(w, v); err != nil {
 			return
 		}
 	}
