@@ -16,6 +16,7 @@ var (
 	bFalse       = []byte("false")
 )
 
+// Read reads the next term from r.
 func (c *Context) Read(r io.Reader) (term Term, err error) {
 	var etype byte
 	if etype, err = ruint8(r); err != nil {

@@ -7,9 +7,11 @@ import (
 	"math"
 	"math/big"
 	"reflect"
-	"slices"
 )
 
+// Write writes a term to w. It prepends the ETF version number to the
+// term. If you would like to write a term without the version number,
+// use [WriteTerm] instead.
 func (c *Context) Write(w io.Writer, term interface{}) (err error) {
 	_, err = w.Write([]byte{EtVersion})
 	if err != nil {
@@ -19,6 +21,7 @@ func (c *Context) Write(w io.Writer, term interface{}) (err error) {
 	return c.WriteTerm(w, term)
 }
 
+// WriteTerm writes a term to w.
 func (c *Context) WriteTerm(w io.Writer, term any) (err error) {
 	switch v := term.(type) {
 	case bool:
@@ -349,11 +352,8 @@ func (c *Context) writeTuple(w io.Writer, tuple Tuple) (err error) {
 	return
 }
 
-func reverse(b []byte) []byte {
-	slices.Reverse(b)
-	return b
-}
-
+// ErrUnknownType is returned by an attempt to write a type that isn't
+// supported.
 type ErrUnknownType struct {
 	t reflect.Type
 }

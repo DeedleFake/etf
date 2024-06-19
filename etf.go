@@ -2,6 +2,7 @@ package etf
 
 import (
 	"fmt"
+	"slices"
 )
 
 type cacheFlag struct {
@@ -14,6 +15,8 @@ type atomCacheRef struct {
 	text *string
 }
 
+// Context stores globally useful information that can carry between
+// reads and writes, such as caching of atoms.
 type Context struct {
 	atomCache    [2048]*string
 	currentCache []*string
@@ -136,4 +139,9 @@ func tagName(t byte) (name string) {
 		name = fmt.Sprintf("%d", t)
 	}
 	return
+}
+
+func reverse(b []byte) []byte {
+	slices.Reverse(b)
+	return b
 }
