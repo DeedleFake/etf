@@ -115,6 +115,14 @@ func (c *Context) ReadDist(r io.Reader) (err error) {
 }
 
 func (c *Context) Read(r io.Reader) (term Term, err error) {
+	var version byte
+	if version, err = ruint8(r); err != nil {
+		return nil, err
+	}
+	if version != EtVersion {
+		return nil, fmt.Errorf("unsupported version read: %d", version)
+	}
+
 	var etype byte
 	if etype, err = ruint8(r); err != nil {
 		return nil, err
