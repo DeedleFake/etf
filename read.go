@@ -9,10 +9,6 @@ import (
 	"math/big"
 )
 
-type ErrUnknownTerm struct {
-	termType byte
-}
-
 var (
 	ErrFloatScan = fmt.Errorf("read: failed to sscanf float")
 	be           = binary.BigEndian
@@ -317,10 +313,6 @@ func (c *Context) Read(r io.Reader) (term Term, err error) {
 	return
 }
 
-func (e *ErrUnknownTerm) Error() string {
-	return fmt.Sprintf("read: unknown term type %q (%d)", e.termType, e.termType)
-}
-
 func newAtom(b []byte) interface{} {
 	if bytes.Compare(b, bTrue) == 0 {
 		return true
@@ -388,4 +380,12 @@ func buint16(r io.Reader) ([]byte, error) {
 func buint32(r io.Reader) ([]byte, error) {
 	size, err := ruint32(r)
 	return make([]byte, size), err
+}
+
+type ErrUnknownTerm struct {
+	termType byte
+}
+
+func (e *ErrUnknownTerm) Error() string {
+	return fmt.Sprintf("read: unknown term type %q (%d)", e.termType, e.termType)
 }
