@@ -408,7 +408,7 @@ func (c *Context) Read(r io.Reader) (term Term, err error) {
 }
 
 func (e *ErrUnknownTerm) Error() string {
-	return fmt.Sprintf("read: unknown term type %q (%d)", e.termType)
+	return fmt.Sprintf("read: unknown term type %q (%d)", e.termType, e.termType)
 }
 
 func newAtom(b []byte) interface{} {
