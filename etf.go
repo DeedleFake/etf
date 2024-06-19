@@ -97,11 +97,6 @@ const (
 	EtVersion = byte(131)
 )
 
-const (
-	// Erlang distribution header
-	EtDist = byte('D')
-)
-
 var tagNames = map[byte]string{
 	ettAtom:          "ATOM_EXT",
 	ettAtomUTF8:      "ATOM_UTF8_EXT",
