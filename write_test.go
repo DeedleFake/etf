@@ -209,7 +209,7 @@ func TestWriteString(t *testing.T) {
 func TestWriteTerm(t *testing.T) {
 	c := new(Context)
 	type s1 struct {
-		L []interface{}
+		L []any
 		F float64
 	}
 	type s2 struct {
@@ -224,7 +224,7 @@ func TestWriteTerm(t *testing.T) {
 		"omg",
 		13666,
 		s1{
-			[]interface{}{
+			[]any{
 				256,
 				"1",
 				13.0,

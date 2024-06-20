@@ -32,7 +32,7 @@ func (c *Context) Encoder(w io.Writer) *Encoder {
 	return &Encoder{c: c, w: w}
 }
 
-type Term interface{}
+type Term any
 type Tuple []Term
 type List []Term
 type Atom string

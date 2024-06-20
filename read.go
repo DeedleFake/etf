@@ -120,7 +120,7 @@ func (d *Decoder) Decode() (term Term, err error) {
 		term = List{}
 
 	case ettPid:
-		var node interface{}
+		var node any
 		var pid Pid
 		b = make([]byte, 9)
 		if node, err = d.Decode(); err != nil {
@@ -137,7 +137,7 @@ func (d *Decoder) Decode() (term Term, err error) {
 	case ettNewRef:
 		// $rLL…
 		var ref Ref
-		var node interface{}
+		var node any
 		var nid uint16
 		if nid, err = ruint16(d.r); err != nil {
 			return
@@ -158,7 +158,7 @@ func (d *Decoder) Decode() (term Term, err error) {
 	case ettRef:
 		// $e…LLLLB
 		var ref Ref
-		var node interface{}
+		var node any
 		if node, err = d.Decode(); err != nil {
 			return
 		}
@@ -237,7 +237,7 @@ func (d *Decoder) Decode() (term Term, err error) {
 
 	case ettExport:
 		// $qM…F…A
-		var m, f interface{}
+		var m, f any
 		var a uint8
 		if m, err = d.Decode(); err != nil {
 			break
@@ -320,7 +320,7 @@ func (d *Decoder) Decode() (term Term, err error) {
 	return
 }
 
-func newAtom(b []byte) interface{} {
+func newAtom(b []byte) any {
 	if bytes.Compare(b, bTrue) == 0 {
 		return true
 	} else if bytes.Compare(b, bFalse) == 0 {
@@ -329,7 +329,7 @@ func newAtom(b []byte) interface{} {
 	return Atom(b)
 }
 
-func readBigInt(r *bufio.Reader, b []byte, sign byte) (interface{}, error) {
+func readBigInt(r *bufio.Reader, b []byte, sign byte) (any, error) {
 	if _, err := io.ReadFull(r, b); err != nil {
 		return nil, err
 	}

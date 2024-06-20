@@ -13,7 +13,7 @@ type Encoder struct {
 	w io.Writer
 }
 
-func (e *Encoder) Encode(term interface{}) (err error) {
+func (e *Encoder) Encode(term any) (err error) {
 	_, err = e.w.Write([]byte{EtVersion})
 	if err != nil {
 		return err
@@ -237,7 +237,7 @@ func (e *Encoder) writeString(s string) (err error) {
 	return
 }
 
-func (e *Encoder) writeList(l interface{}) (err error) {
+func (e *Encoder) writeList(l any) (err error) {
 	rv := reflect.ValueOf(l)
 	n := rv.Len()
 	_, err = e.w.Write([]byte{
@@ -264,7 +264,7 @@ func (e *Encoder) writeList(l interface{}) (err error) {
 	return
 }
 
-func (e *Encoder) writeRecord(r interface{}) (err error) {
+func (e *Encoder) writeRecord(r any) (err error) {
 	rv := reflect.ValueOf(r)
 	rt := rv.Type()
 	fields := make([]reflect.StructField, 0, rt.NumField())
