@@ -11,7 +11,8 @@ func TestReadAtom(t *testing.T) {
 
 	// 'abc'
 	in := bytes.NewBuffer([]byte{100, 0, 3, 97, 98, 99})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Fatal(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -21,7 +22,8 @@ func TestReadAtom(t *testing.T) {
 
 	// ''
 	in = bytes.NewBuffer([]byte{100, 0, 0})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Fatal(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -31,7 +33,8 @@ func TestReadAtom(t *testing.T) {
 
 	// 'abc' as SmallAtom
 	in = bytes.NewBuffer([]byte{115, 3, 97, 98, 99})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Fatal(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -41,7 +44,8 @@ func TestReadAtom(t *testing.T) {
 
 	// '' as SmallAtom
 	in = bytes.NewBuffer([]byte{115, 0})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Fatal(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -50,12 +54,14 @@ func TestReadAtom(t *testing.T) {
 	}
 
 	// error (ends abruptly)
-	if _, err := c.Read(bytes.NewBuffer([]byte{100, 0, 4, 97, 98, 99})); err == nil {
+	d = c.Decoder(bytes.NewBuffer([]byte{100, 0, 4, 97, 98, 99}))
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (bad length)
-	if _, err := c.Read(bytes.NewBuffer([]byte{100})); err == nil {
+	d = c.Decoder(bytes.NewBuffer([]byte{100}))
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 }
@@ -65,7 +71,8 @@ func TestReadBinary(t *testing.T) {
 
 	// <<1,2,3,4,5>>
 	in := bytes.NewBuffer([]byte{109, 0, 0, 0, 5, 1, 2, 3, 4, 5})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -79,7 +86,8 @@ func TestReadBitBinary(t *testing.T) {
 
 	// <<1,2,3,4,5:3>>
 	in := bytes.NewBuffer([]byte{77, 0, 0, 0, 5, 3, 1, 2, 3, 4, 160})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -93,7 +101,8 @@ func TestReadBool(t *testing.T) {
 
 	// true
 	in := bytes.NewBuffer([]byte{100, 0, 4, 't', 'r', 'u', 'e'})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -103,7 +112,8 @@ func TestReadBool(t *testing.T) {
 
 	// false
 	in = bytes.NewBuffer([]byte{100, 0, 5, 'f', 'a', 'l', 's', 'e'})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -113,7 +123,8 @@ func TestReadBool(t *testing.T) {
 
 	// error
 	in = bytes.NewBuffer([]byte{100, 0, 3, 97, 98, 99})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -130,7 +141,8 @@ func TestReadFloat(t *testing.T) {
 		99, 49, 46, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
 		48, 48, 48, 53, 53, 53, 49, 101, 45, 48, 49, 0, 0, 0, 0, 0,
 	})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -140,7 +152,8 @@ func TestReadFloat(t *testing.T) {
 
 	// 0.1
 	in = bytes.NewBuffer([]byte{70, 63, 185, 153, 153, 153, 153, 153, 154})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -153,7 +166,8 @@ func TestReadFloat(t *testing.T) {
 		99, 49, 46, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
 		48, 48, 48, 53, 53, 53, 49, 101, 45, 48, 49, 0, 0, 0, 0,
 	})
-	if _, err := c.Read(in); err == nil {
+	d = c.Decoder(in)
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
@@ -162,17 +176,20 @@ func TestReadFloat(t *testing.T) {
 		99, 99, 46, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
 		48, 48, 48, 53, 53, 53, 49, 101, 45, 48, 49, 0, 0, 0, 0, 0,
 	})
-	if _, err := c.Read(in); err == nil {
+	d = c.Decoder(in)
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (bad length)
-	if _, err := c.Read(bytes.NewBuffer([]byte{99})); err == nil {
+	d = c.Decoder(bytes.NewBuffer([]byte{99}))
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (bad length)
-	if _, err := c.Read(bytes.NewBuffer([]byte{70})); err == nil {
+	d = c.Decoder(bytes.NewBuffer([]byte{70}))
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 }
@@ -182,7 +199,8 @@ func TestReadInt(t *testing.T) {
 
 	// 255
 	in := bytes.NewBuffer([]byte{97, 255})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -192,7 +210,8 @@ func TestReadInt(t *testing.T) {
 
 	// 0x7fffffff
 	in = bytes.NewBuffer([]byte{98, 127, 255, 255, 255})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -202,7 +221,8 @@ func TestReadInt(t *testing.T) {
 
 	// -0x80000000
 	in = bytes.NewBuffer([]byte{98, 128, 0, 0, 0})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -212,7 +232,8 @@ func TestReadInt(t *testing.T) {
 
 	// 0x7fffffffffffffff
 	in = bytes.NewBuffer([]byte{110, 8, 0, 255, 255, 255, 255, 255, 255, 255, 127})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -231,7 +252,8 @@ func TestReadInt(t *testing.T) {
 
 	// -0x8000000000000000
 	in = bytes.NewBuffer([]byte{110, 8, 1, 0, 0, 0, 0, 0, 0, 0, 128})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -250,7 +272,8 @@ func TestReadInt(t *testing.T) {
 
 	// error (bad length)
 	for _, b := range []byte{97, 98, 110, 111} {
-		if _, err := c.Read(bytes.NewBuffer([]byte{b})); err == nil {
+		d = c.Decoder(bytes.NewBuffer([]byte{b}))
+		if _, err := d.Decode(); err == nil {
 			t.Errorf("err == nil (%d)", b)
 		}
 	}
@@ -269,7 +292,8 @@ func TestReadInt(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 	})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -291,8 +315,9 @@ func TestReadInt(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 	})
+	d = c.Decoder(in)
 	exp := new(big.Int).Neg(new(big.Int).Lsh(big.NewInt(1), 2040))
-	if v, err := c.Read(in); err != nil {
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -302,7 +327,8 @@ func TestReadInt(t *testing.T) {
 
 	// 0 (small big)
 	in = bytes.NewBuffer([]byte{110, 0, 0})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -312,7 +338,8 @@ func TestReadInt(t *testing.T) {
 
 	// 0 (large big)
 	in = bytes.NewBuffer([]byte{111, 0, 0, 0, 0, 0})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -332,7 +359,8 @@ func TestReadPid(t *testing.T) {
 		0, 0, 38, 0, 0, 0, 0, 3,
 	})
 	exp := Pid{Atom("lol@localhost"), 38, 0, 3}
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -347,8 +375,9 @@ func TestReadPid(t *testing.T) {
 		111, 104, 111, 115, 116, 0,
 		0, 0, 32, 0, 0, 0, 0, 0,
 	})
+	d = c.Decoder(in)
 	exp = Pid{Atom("nonode@nohost"), 32, 0, 0}
-	if v, err := c.Read(in); err != nil {
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -362,7 +391,8 @@ func TestReadString(t *testing.T) {
 
 	// "" (empty string)
 	in := bytes.NewBuffer([]byte{107, 0, 0})
-	if v, err := c.Read(in); err != nil {
+	d := c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -372,7 +402,8 @@ func TestReadString(t *testing.T) {
 
 	// "abc"
 	in = bytes.NewBuffer([]byte{107, 0, 3, 97, 98, 99})
-	if v, err := c.Read(in); err != nil {
+	d = c.Decoder(in)
+	if v, err := d.Decode(); err != nil {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
@@ -382,25 +413,29 @@ func TestReadString(t *testing.T) {
 
 	// error (wrong length) in string
 	in = bytes.NewBuffer([]byte{107, 0, 3, 97, 98})
-	if _, err := c.Read(in); err == nil {
+	d = c.Decoder(in)
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (wrong length) in binary string
 	in = bytes.NewBuffer([]byte{109, 0, 0, 0, 3, 97, 98})
-	if _, err := c.Read(in); err == nil {
+	d = c.Decoder(in)
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (improper list) [$a,$b,$c|0]
 	in = bytes.NewBuffer([]byte{108, 0, 0, 0, 3, 97, 98, 99, 0})
-	if _, err := c.Read(in); err == nil {
+	d = c.Decoder(in)
+	if _, err := d.Decode(); err == nil {
 		t.Error("err == nil")
 	}
 
 	// error (bad length)
 	for _, b := range []byte{107, 108, 109} {
-		if _, err := c.Read(bytes.NewBuffer([]byte{b})); err == nil {
+		d = c.Decoder(bytes.NewBuffer([]byte{b}))
+		if _, err := d.Decode(); err == nil {
 			t.Errorf("err == nil (%d)", b)
 		}
 	}
@@ -422,7 +457,8 @@ func TestReadTerm(t *testing.T) {
 		106,
 		98, 0, 0, 2, 154,
 	})
-	_, err := c.Read(in)
+	d := c.Decoder(in)
+	_, err := d.Decode()
 	if err != nil {
 		t.Fatal(err)
 	}

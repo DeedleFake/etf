@@ -1,7 +1,6 @@
 package etf
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"math"
@@ -9,54 +8,55 @@ import (
 	"reflect"
 )
 
-// Write writes a term to w. It prepends the ETF version number to the
-// term. If you would like to write a term without the version number,
-// use [WriteTerm] instead.
-func (c *Context) Write(w io.Writer, term interface{}) (err error) {
-	_, err = w.Write([]byte{EtVersion})
+type Encoder struct {
+	c *Context
+	w io.Writer
+}
+
+func (e *Encoder) Encode(term interface{}) (err error) {
+	_, err = e.w.Write([]byte{EtVersion})
 	if err != nil {
 		return err
 	}
 
-	return c.WriteTerm(w, term)
+	return e.EncodeTerm(term)
 }
 
-// WriteTerm writes a term to w.
-func (c *Context) WriteTerm(w io.Writer, term any) (err error) {
+func (e *Encoder) EncodeTerm(term any) (err error) {
 	switch v := term.(type) {
 	case bool:
-		err = c.writeBool(w, v)
+		err = e.writeBool(v)
 	case int8, int16, int32, int64, int:
-		err = c.writeInt(w, reflect.ValueOf(term).Int())
+		err = e.writeInt(reflect.ValueOf(term).Int())
 	case uint8, uint16, uint32, uint64, uintptr, uint:
-		err = c.writeUint(w, reflect.ValueOf(term).Uint())
+		err = e.writeUint(reflect.ValueOf(term).Uint())
 	case *big.Int:
-		err = c.writeBigInt(w, v)
+		err = e.writeBigInt(v)
 	case string:
-		err = c.writeString(w, v)
+		err = e.writeString(v)
 	case []byte:
-		err = c.writeBinary(w, v)
+		err = e.writeBinary(v)
 	case float64:
-		err = c.writeFloat(w, v)
+		err = e.writeFloat(v)
 	case float32:
-		err = c.writeFloat(w, float64(v))
+		err = e.writeFloat(float64(v))
 	case Atom:
-		err = c.writeAtom(w, v)
+		err = e.writeAtom(v)
 	case Pid:
-		err = c.writePid(w, v)
+		err = e.writePid(v)
 	case Tuple:
-		err = c.writeTuple(w, v)
+		err = e.writeTuple(v)
 	case Ref:
-		err = c.writeRef(w, v)
+		err = e.writeRef(v)
 	default:
 		rv := reflect.ValueOf(v)
 		switch rv.Kind() {
 		case reflect.Struct:
-			err = c.writeRecord(w, term)
+			err = e.writeRecord(term)
 		case reflect.Array, reflect.Slice:
-			err = c.writeList(w, term)
+			err = e.writeList(term)
 		case reflect.Ptr:
-			err = c.WriteTerm(w, rv.Elem())
+			err = e.EncodeTerm(rv.Elem())
 		//case reflect.Map // FIXME
 		default:
 			err = &ErrUnknownType{rv.Type()}
@@ -66,19 +66,19 @@ func (c *Context) WriteTerm(w io.Writer, term any) (err error) {
 	return
 }
 
-func (c *Context) writeAtom(w io.Writer, atom Atom) (err error) {
+func (e *Encoder) writeAtom(atom Atom) (err error) {
 	switch size := len(atom); {
 	case size <= math.MaxUint8:
 		// $sL…
-		if _, err = w.Write([]byte{ettSmallAtom, byte(size)}); err == nil {
-			_, err = io.WriteString(w, string(atom))
+		if _, err = e.w.Write([]byte{ettSmallAtom, byte(size)}); err == nil {
+			_, err = io.WriteString(e.w, string(atom))
 		}
 
 	case size <= math.MaxUint16:
 		// $dLL…
-		_, err = w.Write([]byte{ettAtom, byte(size >> 8), byte(size)})
+		_, err = e.w.Write([]byte{ettAtom, byte(size >> 8), byte(size)})
 		if err == nil {
-			_, err = io.WriteString(w, string(atom))
+			_, err = io.WriteString(e.w, string(atom))
 		}
 
 	default:
@@ -88,7 +88,7 @@ func (c *Context) writeAtom(w io.Writer, atom Atom) (err error) {
 	return
 }
 
-func (c *Context) writeBigInt(w io.Writer, x *big.Int) (err error) {
+func (e *Encoder) writeBigInt(x *big.Int) (err error) {
 	sign := 0
 	if x.Sign() < 0 {
 		sign = 1
@@ -99,11 +99,11 @@ func (c *Context) writeBigInt(w io.Writer, x *big.Int) (err error) {
 	switch size := int64(len(bytes)); {
 	case size <= math.MaxUint8:
 		// $nAS…
-		_, err = w.Write([]byte{ettSmallBig, byte(size), byte(sign)})
+		_, err = e.w.Write([]byte{ettSmallBig, byte(size), byte(sign)})
 
 	case size <= math.MaxUint32:
 		// $oAAAAS…
-		_, err = w.Write([]byte{
+		_, err = e.w.Write([]byte{
 			ettLargeBig,
 			byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
 			byte(sign),
@@ -114,13 +114,13 @@ func (c *Context) writeBigInt(w io.Writer, x *big.Int) (err error) {
 	}
 
 	if err == nil {
-		_, err = w.Write(bytes)
+		_, err = e.w.Write(bytes)
 	}
 
 	return
 }
 
-func (c *Context) writeBinary(w io.Writer, bytes []byte) (err error) {
+func (e *Encoder) writeBinary(bytes []byte) (err error) {
 	switch size := int64(len(bytes)); {
 	case size <= math.MaxUint32:
 		// $mLLLL…
@@ -128,8 +128,8 @@ func (c *Context) writeBinary(w io.Writer, bytes []byte) (err error) {
 			ettBinary,
 			byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
 		}
-		if _, err = w.Write(data); err == nil {
-			_, err = w.Write(bytes)
+		if _, err = e.w.Write(data); err == nil {
+			_, err = e.w.Write(bytes)
 		}
 
 	default:
@@ -139,21 +139,21 @@ func (c *Context) writeBinary(w io.Writer, bytes []byte) (err error) {
 	return
 }
 
-func (c *Context) writeBool(w io.Writer, b bool) (err error) {
+func (e *Encoder) writeBool(b bool) (err error) {
 	// $sL…
 	if b {
-		_, err = w.Write([]byte{ettSmallAtom, 4, 't', 'r', 'u', 'e'})
+		_, err = e.w.Write([]byte{ettSmallAtom, 4, 't', 'r', 'u', 'e'})
 	} else {
-		_, err = w.Write([]byte{ettSmallAtom, 5, 'f', 'a', 'l', 's', 'e'})
+		_, err = e.w.Write([]byte{ettSmallAtom, 5, 'f', 'a', 'l', 's', 'e'})
 	}
 
 	return
 }
 
-func (c *Context) writeFloat(w io.Writer, f float64) (err error) {
-	if _, err = w.Write([]byte{ettNewFloat}); err == nil {
+func (e *Encoder) writeFloat(f float64) (err error) {
+	if _, err = e.w.Write([]byte{ettNewFloat}); err == nil {
 		fb := math.Float64bits(f)
-		_, err = w.Write([]byte{
+		_, err = e.w.Write([]byte{
 			byte(fb >> 56), byte(fb >> 48), byte(fb >> 40), byte(fb >> 32),
 			byte(fb >> 24), byte(fb >> 16), byte(fb >> 8), byte(fb),
 		})
@@ -161,55 +161,55 @@ func (c *Context) writeFloat(w io.Writer, f float64) (err error) {
 	return
 }
 
-func (c *Context) writeInt(w io.Writer, x int64) (err error) {
+func (e *Encoder) writeInt(x int64) (err error) {
 	switch {
 	case x >= 0 && x <= math.MaxUint8:
 		// $aI
-		_, err = w.Write([]byte{ettSmallInteger, byte(x)})
+		_, err = e.w.Write([]byte{ettSmallInteger, byte(x)})
 
 	case x >= math.MinInt32 && x <= math.MaxInt32:
 		// $bIIII
 		x := int32(x)
-		_, err = w.Write([]byte{
+		_, err = e.w.Write([]byte{
 			ettInteger,
 			byte(x >> 24), byte(x >> 16), byte(x >> 8), byte(x),
 		})
 
 	default:
-		err = c.writeBigInt(w, big.NewInt(x))
+		err = e.writeBigInt(big.NewInt(x))
 	}
 
 	return
 }
 
-func (c *Context) writeUint(w io.Writer, x uint64) (err error) {
+func (e *Encoder) writeUint(x uint64) (err error) {
 	switch {
 	case x <= math.MaxUint8:
 		// $aI
-		_, err = w.Write([]byte{ettSmallInteger, byte(x)})
+		_, err = e.w.Write([]byte{ettSmallInteger, byte(x)})
 
 	case x <= math.MaxInt32:
 		// $bIIII
-		_, err = w.Write([]byte{
+		_, err = e.w.Write([]byte{
 			ettInteger,
 			byte(x >> 24), byte(x >> 16), byte(x >> 8), byte(x),
 		})
 
 	default:
-		err = c.writeBigInt(w, new(big.Int).SetUint64(x))
+		err = e.writeBigInt(new(big.Int).SetUint64(x))
 	}
 
 	return
 }
 
-func (c *Context) writePid(w io.Writer, p Pid) (err error) {
-	if _, err = w.Write([]byte{ettPid}); err != nil {
+func (e *Encoder) writePid(p Pid) (err error) {
+	if _, err = e.w.Write([]byte{ettPid}); err != nil {
 		return
-	} else if err = c.writeAtom(w, p.Node); err != nil {
+	} else if err = e.writeAtom(p.Node); err != nil {
 		return
 	}
 
-	_, err = w.Write([]byte{
+	_, err = e.w.Write([]byte{
 		0, 0, byte(p.Id >> 8), byte(p.Id),
 		byte(p.Serial >> 24),
 		byte(p.Serial >> 16),
@@ -221,13 +221,13 @@ func (c *Context) writePid(w io.Writer, p Pid) (err error) {
 	return
 }
 
-func (c *Context) writeString(w io.Writer, s string) (err error) {
+func (e *Encoder) writeString(s string) (err error) {
 	switch size := len(s); {
 	case size <= math.MaxUint16:
 		// $kLL…
-		_, err = w.Write([]byte{ettString, byte(size >> 8), byte(size)})
+		_, err = e.w.Write([]byte{ettString, byte(size >> 8), byte(size)})
 		if err == nil {
-			_, err = w.Write([]byte(s))
+			_, err = e.w.Write([]byte(s))
 		}
 
 	default:
@@ -237,10 +237,10 @@ func (c *Context) writeString(w io.Writer, s string) (err error) {
 	return
 }
 
-func (c *Context) writeList(w io.Writer, l interface{}) (err error) {
+func (e *Encoder) writeList(l interface{}) (err error) {
 	rv := reflect.ValueOf(l)
 	n := rv.Len()
-	_, err = w.Write([]byte{
+	_, err = e.w.Write([]byte{
 		ettList,
 		byte(n >> 24),
 		byte(n >> 16),
@@ -254,60 +254,63 @@ func (c *Context) writeList(w io.Writer, l interface{}) (err error) {
 
 	for i := 0; i < n; i++ {
 		v := rv.Index(i).Interface()
-		if err = c.WriteTerm(w, v); err != nil {
+		if err = e.EncodeTerm(v); err != nil {
 			return
 		}
 	}
 
-	_, err = w.Write([]byte{ettNil})
+	_, err = e.w.Write([]byte{ettNil})
 
 	return
 }
 
-func (c *Context) writeRecord(w io.Writer, r interface{}) (err error) {
+func (e *Encoder) writeRecord(r interface{}) (err error) {
 	rv := reflect.ValueOf(r)
-	n := rv.NumField()
-	buf := new(bytes.Buffer)
-	arity := 0
+	rt := rv.Type()
+	fields := make([]reflect.StructField, 0, rt.NumField())
+	for i := 0; i < rt.NumField(); i++ {
+		field := rt.Field(i)
+		if field.Anonymous || !field.IsExported() {
+			continue
+		}
+		fields = append(fields, field)
+	}
 
-	for i := 0; i < n; i++ {
-		if f := rv.Field(i); f.CanInterface() {
-			if err = c.WriteTerm(buf, f.Interface()); err != nil {
-				return
-			}
-			arity++
+	if len(fields) <= math.MaxUint8 {
+		_, err = e.w.Write([]byte{ettSmallTuple, byte(len(fields))})
+	} else {
+		_, err = e.w.Write([]byte{
+			ettLargeTuple,
+			byte(len(fields) >> 24),
+			byte(len(fields) >> 16),
+			byte(len(fields) >> 8),
+			byte(len(fields)),
+		})
+	}
+	if err != nil {
+		return err
+	}
+
+	for _, field := range fields {
+		f := rv.FieldByIndex(field.Index)
+		if err = e.EncodeTerm(f.Interface()); err != nil {
+			return err
 		}
 	}
 
-	if arity <= math.MaxUint8 {
-		_, err = w.Write([]byte{ettSmallTuple, byte(arity)})
-	} else {
-		_, err = w.Write([]byte{
-			ettLargeTuple,
-			byte(arity >> 24),
-			byte(arity >> 16),
-			byte(arity >> 8),
-			byte(arity),
-		})
-	}
-
-	if err == nil {
-		_, err = buf.WriteTo(w)
-	}
-
-	return
+	return err
 }
 
-func (c *Context) writeRef(w io.Writer, ref Ref) (err error) {
+func (e *Encoder) writeRef(ref Ref) (err error) {
 	n := len(ref.Id)
-	_, err = w.Write([]byte{ettNewRef, byte(n >> 8), byte(n)})
+	_, err = e.w.Write([]byte{ettNewRef, byte(n >> 8), byte(n)})
 	if err != nil {
 		return
 	}
-	if err = c.writeAtom(w, ref.Node); err != nil {
+	if err = e.writeAtom(ref.Node); err != nil {
 		return
 	}
-	if _, err = w.Write([]byte{ref.Creation}); err != nil {
+	if _, err = e.w.Write([]byte{ref.Creation}); err != nil {
 		return
 	}
 	for _, v := range ref.Id {
@@ -317,7 +320,7 @@ func (c *Context) writeRef(w io.Writer, ref Ref) (err error) {
 			byte(v >> 8),
 			byte(v),
 		}
-		if _, err = w.Write(b); err != nil {
+		if _, err = e.w.Write(b); err != nil {
 			return
 		}
 	}
@@ -325,12 +328,12 @@ func (c *Context) writeRef(w io.Writer, ref Ref) (err error) {
 	return
 }
 
-func (c *Context) writeTuple(w io.Writer, tuple Tuple) (err error) {
+func (e *Encoder) writeTuple(tuple Tuple) (err error) {
 	n := len(tuple)
 	if n <= math.MaxUint8 {
-		_, err = w.Write([]byte{ettSmallTuple, byte(n)})
+		_, err = e.w.Write([]byte{ettSmallTuple, byte(n)})
 	} else {
-		_, err = w.Write([]byte{
+		_, err = e.w.Write([]byte{
 			ettLargeTuple,
 			byte(n >> 24),
 			byte(n >> 16),
@@ -344,7 +347,7 @@ func (c *Context) writeTuple(w io.Writer, tuple Tuple) (err error) {
 	}
 
 	for _, v := range tuple {
-		if err = c.WriteTerm(w, v); err != nil {
+		if err = e.EncodeTerm(v); err != nil {
 			return
 		}
 	}

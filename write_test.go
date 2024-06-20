@@ -12,13 +12,14 @@ func TestWriteAtom(t *testing.T) {
 	c := new(Context)
 	test := func(in Atom, shouldFail bool) {
 		w := new(bytes.Buffer)
-		if err := c.writeAtom(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeAtom(in); err != nil {
 			if !shouldFail {
 				t.Error(in, err)
 			}
 		} else if shouldFail {
 			t.Errorf("err == nil (%v)", in)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -38,9 +39,10 @@ func TestWriteBinary(t *testing.T) {
 	c := new(Context)
 	test := func(in []byte) {
 		w := new(bytes.Buffer)
-		if err := c.writeBinary(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeBinary(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -58,9 +60,10 @@ func TestWriteBool(t *testing.T) {
 	c := new(Context)
 	test := func(in bool) {
 		w := new(bytes.Buffer)
-		if err := c.writeBool(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeBool(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -77,9 +80,10 @@ func TestWriteFloat(t *testing.T) {
 	c := new(Context)
 	test := func(in float64) {
 		w := new(bytes.Buffer)
-		if err := c.writeFloat(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeFloat(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -98,9 +102,10 @@ func TestWriteInt(t *testing.T) {
 	c := new(Context)
 	test := func(in int64) {
 		w := new(bytes.Buffer)
-		if err := c.writeInt(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeInt(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -125,9 +130,10 @@ func TestWriteUint(t *testing.T) {
 	c := new(Context)
 	test := func(in uint64) {
 		w := new(bytes.Buffer)
-		if err := c.writeUint(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeUint(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -159,9 +165,10 @@ func TestWritePid(t *testing.T) {
 	c := new(Context)
 	test := func(in Pid) {
 		w := new(bytes.Buffer)
-		if err := c.writePid(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writePid(in); err != nil {
 			t.Error(in, err)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -178,13 +185,14 @@ func TestWriteString(t *testing.T) {
 	c := new(Context)
 	test := func(in string, shouldFail bool) {
 		w := new(bytes.Buffer)
-		if err := c.writeString(w, in); err != nil {
+		e := c.Encoder(w)
+		if err := e.writeString(in); err != nil {
 			if !shouldFail {
 				t.Error(in, err)
 			}
 		} else if shouldFail {
 			t.Errorf("err == nil (%v)", in)
-		} else if v, err := c.Read(w); err != nil {
+		} else if v, err := c.Decoder(w).Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
@@ -227,16 +235,18 @@ func TestWriteTerm(t *testing.T) {
 	}
 
 	w := new(bytes.Buffer)
-	if err := c.Write(w, in); err != nil {
+	e := c.Encoder(w)
+	if err := e.Encode(in); err != nil {
 		t.Error(in, err)
 	} else {
-		if term, err := c.Read(w); err != nil {
+		d := c.Decoder(w)
+		if term, err := d.Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
-		} else if err := c.Write(w, term); err != nil {
+		} else if err := e.Encode(term); err != nil {
 			t.Error(term, err)
-		} else if term, err := c.Read(w); err != nil {
+		} else if term, err := d.Decode(); err != nil {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", term, l)

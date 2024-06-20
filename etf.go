@@ -1,7 +1,9 @@
 package etf
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"slices"
 )
 
@@ -20,6 +22,14 @@ type atomCacheRef struct {
 type Context struct {
 	atomCache    [2048]*string
 	currentCache []*string
+}
+
+func (c *Context) Decoder(r io.Reader) *Decoder {
+	return &Decoder{c: c, r: bufio.NewReader(r)}
+}
+
+func (c *Context) Encoder(w io.Writer) *Encoder {
+	return &Encoder{c: c, w: w}
 }
 
 type Term interface{}
