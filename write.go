@@ -267,13 +267,13 @@ func (e *Encoder) writeList(l any) (err error) {
 func (e *Encoder) writeRecord(r any) (err error) {
 	rv := reflect.ValueOf(r)
 	rt := rv.Type()
-	fields := make([]reflect.StructField, 0, rt.NumField())
+	fields := make([]reflect.Value, 0, rt.NumField())
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
 		if field.Anonymous || !field.IsExported() {
 			continue
 		}
-		fields = append(fields, field)
+		fields = append(fields, rv.Field(i))
 	}
 
 	if len(fields) <= math.MaxUint8 {
@@ -292,8 +292,7 @@ func (e *Encoder) writeRecord(r any) (err error) {
 	}
 
 	for _, field := range fields {
-		f := rv.FieldByIndex(field.Index)
-		if err = e.EncodeTerm(f.Interface()); err != nil {
+		if err = e.EncodeTerm(field.Interface()); err != nil {
 			return err
 		}
 	}
