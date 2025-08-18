@@ -17,7 +17,7 @@ func BenchmarkReadAtom(b *testing.B) {
 	length := 64
 	atoms := make([]*bytes.Buffer, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		w := new(bytes.Buffer)
 		s := bytes.Repeat([]byte{'a'}, length)
 		b := bytes.Map(randRune, s)
@@ -84,7 +84,7 @@ func BenchmarkReadBinary(b *testing.B) {
 	length := 64
 	binaries := make([]*bytes.Buffer, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		w := new(bytes.Buffer)
 		s := bytes.Repeat([]byte{'a'}, length)
 		b := bytes.Map(func(rune) rune { return rune(byte(rand.Int())) }, s)
@@ -114,7 +114,7 @@ func BenchmarkReadFloat(b *testing.B) {
 	max := 512
 	floats := make([]*bytes.Buffer, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		w := new(bytes.Buffer)
 		v := rand.ExpFloat64() - rand.ExpFloat64()
 		w.Write([]byte{ettNewFloat})
@@ -143,7 +143,7 @@ func BenchmarkReadPid(b *testing.B) {
 	length := 16
 	pids := make([]*bytes.Buffer, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		w := new(bytes.Buffer)
 		s := bytes.Repeat([]byte{'a'}, length)
 		b := bytes.Map(randRune, s)
@@ -177,7 +177,7 @@ func BenchmarkReadString(b *testing.B) {
 	length := 64
 	strings := make([]*bytes.Buffer, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		w := new(bytes.Buffer)
 		s := bytes.Repeat([]byte{'a'}, length)
 		b := bytes.Map(randRune, s)

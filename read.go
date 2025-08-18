@@ -321,9 +321,9 @@ func (d *Decoder) Decode() (term Term, err error) {
 }
 
 func newAtom(b []byte) any {
-	if bytes.Compare(b, bTrue) == 0 {
+	if bytes.Equal(b, bTrue) {
 		return true
-	} else if bytes.Compare(b, bFalse) == 0 {
+	} else if bytes.Equal(b, bFalse) {
 		return false
 	}
 	return Atom(b)
@@ -336,7 +336,7 @@ func readBigInt(r *bufio.Reader, b []byte, sign byte) (any, error) {
 
 	size := len(b)
 	hsize := size >> 1
-	for i := 0; i < hsize; i++ {
+	for i := range hsize {
 		b[i], b[size-i-1] = b[size-i-1], b[i]
 	}
 

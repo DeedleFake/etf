@@ -46,7 +46,7 @@ func TestWriteBinary(t *testing.T) {
 			t.Error(in, err)
 		} else if l := w.Len(); l != 0 {
 			t.Errorf("%v: buffer len %d", in, l)
-		} else if bytes.Compare(v.([]byte), in) != 0 {
+		} else if !bytes.Equal(v.([]byte), in) {
 			t.Errorf("expected %v, got %v", in, v)
 		}
 	}

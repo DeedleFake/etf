@@ -76,7 +76,7 @@ func TestReadBinary(t *testing.T) {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
-	} else if exp := []byte{1, 2, 3, 4, 5}; bytes.Compare(exp, v.([]byte)) != 0 {
+	} else if exp := []byte{1, 2, 3, 4, 5}; !bytes.Equal(exp, v.([]byte)) {
 		t.Errorf("expected %v, got %v", exp, v)
 	}
 }
@@ -91,7 +91,7 @@ func TestReadBitBinary(t *testing.T) {
 		t.Error(err)
 	} else if l := in.Len(); l != 0 {
 		t.Errorf("buffer len %d", l)
-	} else if exp := []byte{1, 2, 3, 4, 5}; bytes.Compare(exp, v.([]byte)) != 0 {
+	} else if exp := []byte{1, 2, 3, 4, 5}; !bytes.Equal(exp, v.([]byte)) {
 		t.Errorf("expected %v, got %v", exp, v)
 	}
 }

@@ -55,7 +55,7 @@ func (e *Encoder) EncodeTerm(term any) (err error) {
 			err = e.writeRecord(term)
 		case reflect.Array, reflect.Slice:
 			err = e.writeList(term)
-		case reflect.Ptr:
+		case reflect.Pointer:
 			err = e.EncodeTerm(rv.Elem())
 		//case reflect.Map // FIXME
 		default:
@@ -252,7 +252,7 @@ func (e *Encoder) writeList(l any) (err error) {
 		return
 	}
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		v := rv.Index(i).Interface()
 		if err = e.EncodeTerm(v); err != nil {
 			return

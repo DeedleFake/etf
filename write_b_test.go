@@ -16,7 +16,7 @@ func BenchmarkWriteAtom(b *testing.B) {
 	length := 64
 	atoms := make([]Atom, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		atoms[i] = Atom(bytes.Repeat([]byte{byte('A' + i)}, length))
 	}
 
@@ -65,7 +65,7 @@ func BenchmarkWriteBinary(b *testing.B) {
 	length := 64
 	binaries := make([][]byte, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		s := bytes.Repeat([]byte{'a'}, length)
 		binaries[i] = bytes.Map(
 			func(rune) rune { return rune(byte(rand.Int())) },
@@ -91,7 +91,7 @@ func BenchmarkWriteBool(b *testing.B) {
 	max := 64
 	bools := make([]bool, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		bools[i] = (rand.N(2) == 1)
 	}
 
@@ -113,7 +113,7 @@ func BenchmarkWriteFloat(b *testing.B) {
 	max := 512
 	floats := make([]float64, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		floats[i] = rand.ExpFloat64() - rand.ExpFloat64()
 	}
 
@@ -135,7 +135,7 @@ func BenchmarkWriteInt(b *testing.B) {
 	max := 512
 	ints := make([]int64, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		ints[i] = int64(rand.Int32() - rand.Int32())
 	}
 
@@ -157,7 +157,7 @@ func BenchmarkWriteUint(b *testing.B) {
 	max := 512
 	ints := make([]uint64, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		ints[i] = uint64(rand.Int32())
 	}
 
@@ -180,7 +180,7 @@ func BenchmarkWritePid(b *testing.B) {
 	length := 16
 	pids := make([]Pid, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		s := bytes.Repeat([]byte{'a'}, length)
 		b := bytes.Map(randRune, s)
 		b[6] = '@'
@@ -211,7 +211,7 @@ func BenchmarkWriteString(b *testing.B) {
 	length := 64
 	strings := make([]string, max)
 
-	for i := 0; i < max; i++ {
+	for i := range max {
 		s := bytes.Repeat([]byte{'a'}, length)
 		strings[i] = string(bytes.Map(randRune, s))
 	}
